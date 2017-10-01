@@ -82,7 +82,6 @@ class PlusButton extends React.Component {
 
     onButtonClick(e, pm) {
         pm.preventDefault();
-        //  console.log(pm);
         handleClick({
             type: actions.PLUS_ACTION,
             value: e

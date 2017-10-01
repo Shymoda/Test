@@ -1,7 +1,7 @@
 ﻿
 
 .centered {
-    position: fixed; /* or absolute */
+    position: fixed; 
     top: 25%;
     left: 33%;
     width: 440px;

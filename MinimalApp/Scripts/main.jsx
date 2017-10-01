@@ -58,36 +58,85 @@ var styles = {
 
 };
 
-const actions = KeyMirror({ PLUS_ACTION: null });
+const actions = KeyMirror({ EVENT_CLICK_ACTION: null });
 
 const appDispatcher = new Dispatcher();
 
+const handleClick = (action) => {
+    appDispatcher.dispatch(action);
+}
+
+appDispatcher.register(action => {
+    switch (action.type)
+    {
+        case actions.EVENT_CLICK_ACTION:
+        {
+            const {value} = action;
+           /* const state = store.getState();
+            store.setState({ count: state.count + value });*/
+            //console.log(value);
+                 alert(value);
+            break;
+        }
+        default: return null;
+    }
+})
+
+const store = Object.assign({}, EventEmitter.prototype, {
+
+    setTimeSpark: (time) => {
+        
+        store.emit('change');
+    },
+
+    getState: () => {
+        return initialState;
+    },
+
+    addChangeListener: (callback) => {
+        store.on('change', callback);
+    },
+
+    removeChangeListener: (callback) => {
+        store.off('change', callback);
+    }
+})
 
 var events = [
     {
         id:0,
         event: 'Прыжки в длину',
-        time: '10:30'
+        time: '10:30',
+        isSelect: 0,
+        isTimeSelect:0
     },
     {
         id:1,
         event: 'Прыжки в ширину',
-        time: '11:30'
+        time: '11:30',
+        isSelect: 0,
+        isTimeSelect:0
     },
     {
         id:2,
         event: 'Прыжки в глубину',
-        time: '12:30'
+        time: '12:30',
+        isSelect: 0,
+        isTimeSelect: 0
     },
     {
         id: 3,
         event: 'Прыжки в высоту',
-        time: '13:30'
+        time: '13:30',
+        isSelect: 0,
+        isTimeSelect: 0
     },
     {
         id: 4,
         event: 'И тому подобное',
-        time: '14:30'
+        time: '14:30',
+        isSelect: 0,
+        isTimeSelect: 0
     }
 ];
 
@@ -176,16 +225,17 @@ class TimeBlock extends React.Component {
     }
 }
 
-class Event extends React.Component
-{
-    render()
-    {
+class Event extends React.Component {
+    render() {
         var data = this.props.data;
 
         return (
             <tr key={data.id} style={
                 styles.tableEventRow
-            }>
+            }   >
+                <td style={
+                    styles.tableEventCell
+                }> <input type='checkbox' onChange={this.onEventClick.bind(this, data.id)} /> </td>
                 <td style={
                     styles.tableEventCell
                 } >{data.time}</td>
@@ -198,6 +248,18 @@ class Event extends React.Component
             </tr>
         )
 
+    }
+
+    onEventClick(pm, e) {
+      //  e.preventDefault();
+      //  console.log(e.target.checked);
+        if (e.target.checked) {
+            handleClick(
+                {
+                    type: actions.EVENT_CLICK_ACTION,
+                    value: pm
+                });
+        }
     }
 }
 
