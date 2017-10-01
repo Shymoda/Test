@@ -1,0 +1,16 @@
+﻿
+
+.centered {
+    position: fixed; /* or absolute */
+    top: 25%;
+    left: 33%;
+    width: 440px;
+    height: 420px;
+    background: #f0f0f0;
+    align-content: center;
+    overflow: scroll;
+}
+
+body {
+    background-color: DarkSlateGrey;
+}
