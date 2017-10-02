@@ -86,30 +86,45 @@ appDispatcher.register(action => {
         default: return null;
     }
 })
-
+  
 const store = Object.assign({}, EventEmitter.prototype, {
 
     setTimeSpark: (value) => {
         var ev = events.find(function (element, index, array) { return element.id == value.id; });
+
         ev.isSelect = value.state;
+
         store.emit('change');
+
     },
 
-    getTimeState: (data) => {
-
-        var tmp = data.hours + ":" + data.minutes.toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false });
+    getTimeState: () => {
 
         try
         {
-            var ev = events.find(function (element, index, array) { return element.time == tmp });
+            var ev = events.filter(function (element, index, array) { return element.isSelect});
 
-            return { view: ev.isSelect };
+            console.log(ev);
+
+            if(ev.length<2)
+                return { time: ev[0].time };
+            else
+            {
+                for (var i=0; i < ev.length-1; i++)
+                {
+                    if (ev[i].time != ev[i + 1].time) 
+                        return { time: '-----' };
+                    
+                }
+
+                return { time: ev[0].time };
+            }
         }
         catch (e)
         {
-
-                return { view: 0 }
+            return { time: '-----' };
         }
+
     },
 
     addChangeListener: (callback) => {
@@ -132,7 +147,7 @@ var events = [
     {
         id:1,
         event: 'Прыжки в ширину',
-        time: '11:30',
+        time: '10:30',
         isSelect: 0,
         isTimeSelect:0
     },
@@ -160,14 +175,32 @@ var events = [
 ];
 
 class TimeTable extends React.Component {
+
+    constructor(props, context) {
+        super(props, context);
+
+        this.state = { time: '---' };
+
+    }
+
     render()
     {
+        
         var interTime = [];
 
         interTime.push(this.props.borderTime01);
 
         while (true)
         {
+            var tmp = (interTime[interTime.length - 1].hours.toString() + ':' + interTime[interTime.length - 1].minutes.toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false }));
+
+            if (tmp == this.state.time)
+            {
+                interTime[interTime.length - 1].view = 1;
+            }
+            else
+                interTime[interTime.length - 1] .view = 0;
+
             var tmpMin = (interTime[interTime.length - 1].minutes + this.props.TimeStep) % 60;
             var tmpHour = Math.floor(interTime[interTime.length - 1].hours + (interTime[interTime.length - 1].minutes + this.props.TimeStep) / 60);
 
@@ -204,6 +237,18 @@ class TimeTable extends React.Component {
 
         )
     }
+
+    componentDidMount() {
+        store.addChangeListener(this.updateState.bind(this));
+    }
+
+    componentWillUnMount() {
+        store.removeChangeListener(this.updateState.bind(this));
+    }
+
+    updateState() {
+        this.setState(store.getTimeState());
+    }
 }
 
 class TimeRow extends React.Component {
@@ -229,12 +274,6 @@ class TimeRow extends React.Component {
 
 class TimeBlock extends React.Component {
 
-    constructor(props, context) {
-        super(props, context);
-
-        this.state = { view: 0 };
-
-    }
 
     render() {
 
@@ -245,23 +284,11 @@ class TimeBlock extends React.Component {
                 styles.tableTimeCell
             }>
                 <div style={
-                    this.state.view == 0 ?
+                    data.view == 0 ?
                         styles.divTime : styles.divTimeSplash
             }>{data.hours}:{data.minutes.toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false })}</div></td>
             )
 
-    }
-
-    componentDidMount() {
-        store.addChangeListener(this.updateState.bind(this));
-    }
-
-    componentWillUnMount() {
-        store.removeChangeListener(this.updateState.bind(this));
-    }
-
-    updateState() {
-        this.setState(store.getTimeState(this.props.data));
     }
 }
 
