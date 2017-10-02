@@ -53,7 +53,15 @@ var styles = {
         borderRadius: 5,
         background: 'GreenYellow',
         padding: '0.5em',
-}
+    },
+
+
+        divTimeSplash:
+    {
+        borderRadius: 5,
+        background: 'Yellow',
+        padding: '0.5em',
+    }
 
 
 };
@@ -72,10 +80,7 @@ appDispatcher.register(action => {
         case actions.EVENT_CLICK_ACTION:
         {
             const {value} = action;
-           /* const state = store.getState();
-            store.setState({ count: state.count + value });*/
-            //console.log(value);
-                 alert(value);
+            store.setTimeSpark(value);
             break;
         }
         default: return null;
@@ -84,13 +89,27 @@ appDispatcher.register(action => {
 
 const store = Object.assign({}, EventEmitter.prototype, {
 
-    setTimeSpark: (time) => {
-        
+    setTimeSpark: (value) => {
+        var ev = events.find(function (element, index, array) { return element.id == value.id; });
+        ev.isSelect = value.state;
         store.emit('change');
     },
 
-    getState: () => {
-        return initialState;
+    getTimeState: (data) => {
+
+        var tmp = data.hours + ":" + data.minutes.toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false });
+
+        try
+        {
+            var ev = events.find(function (element, index, array) { return element.time == tmp });
+
+            return { view: ev.isSelect };
+        }
+        catch (e)
+        {
+
+                return { view: 0 }
+        }
     },
 
     addChangeListener: (callback) => {
@@ -210,6 +229,13 @@ class TimeRow extends React.Component {
 
 class TimeBlock extends React.Component {
 
+    constructor(props, context) {
+        super(props, context);
+
+        this.state = { view: 0 };
+
+    }
+
     render() {
 
         var data = this.props.data;
@@ -217,15 +243,30 @@ class TimeBlock extends React.Component {
         return (
             <td style={
                 styles.tableTimeCell
-            }><div style={
-                styles.divTime
+            }>
+                <div style={
+                    this.state.view == 0 ?
+                        styles.divTime : styles.divTimeSplash
             }>{data.hours}:{data.minutes.toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false })}</div></td>
             )
 
     }
+
+    componentDidMount() {
+        store.addChangeListener(this.updateState.bind(this));
+    }
+
+    componentWillUnMount() {
+        store.removeChangeListener(this.updateState.bind(this));
+    }
+
+    updateState() {
+        this.setState(store.getTimeState(this.props.data));
+    }
 }
 
 class Event extends React.Component {
+
     render() {
         var data = this.props.data;
 
@@ -251,16 +292,15 @@ class Event extends React.Component {
     }
 
     onEventClick(pm, e) {
-      //  e.preventDefault();
-      //  console.log(e.target.checked);
-        if (e.target.checked) {
+        
             handleClick(
                 {
                     type: actions.EVENT_CLICK_ACTION,
-                    value: pm
+                    value: { id: pm, state: e.target.checked }
                 });
-        }
+        
     }
+
 }
 
 class EventsList extends React.Component
