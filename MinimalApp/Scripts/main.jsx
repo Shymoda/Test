@@ -66,7 +66,7 @@ var styles = {
 
 };
 
-const actions = KeyMirror({ EVENT_CLICK_ACTION: null });
+const actions = KeyMirror({ EVENT_CLICK_ACTION: null , TIME_CLICK_ACTION: null });
 
 const appDispatcher = new Dispatcher();
 
@@ -82,17 +82,44 @@ appDispatcher.register(action => {
             const {value} = action;
             store.setTimeSpark(value);
             break;
-        }
+            }
+        case actions.TIME_CLICK_ACTION:
+            {
+                const {value} = action;
+                store.setEventsTime(value);
+                break;
+            }
         default: return null;
     }
 })
   
 const store = Object.assign({}, EventEmitter.prototype, {
 
+    setEventsTime: (time) => {
+
+        var ev = events.filter(function (element, index, array) { return element.isSelect });
+
+        if (ev.length > 0)
+            events.changes = !events.changes;
+
+
+        for (var i = 0; i < ev.length; i++)
+        {
+            ev[i].time = time;
+        }
+
+        store.emit('change');
+    },
+
+    getEventsState: () => {
+        return { change: events.changes };
+    },
+
     setTimeSpark: (value) => {
         var ev = events.find(function (element, index, array) { return element.id == value.id; });
 
         ev.isSelect = value.state;
+
 
         store.emit('change');
 
@@ -103,8 +130,6 @@ const store = Object.assign({}, EventEmitter.prototype, {
         try
         {
             var ev = events.filter(function (element, index, array) { return element.isSelect});
-
-            console.log(ev);
 
             if(ev.length<2)
                 return { time: ev[0].time };
@@ -134,7 +159,7 @@ const store = Object.assign({}, EventEmitter.prototype, {
     removeChangeListener: (callback) => {
         store.off('change', callback);
     }
-})
+}) 
 
 var events = [
     {
@@ -173,6 +198,8 @@ var events = [
         isTimeSelect: 0
     }
 ];
+
+events.changes = false;
 
 class TimeTable extends React.Component {
 
@@ -279,15 +306,28 @@ class TimeBlock extends React.Component {
 
         var data = this.props.data;
 
+        var time = data.hours + ':' + data.minutes.toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false });
         return (
             <td style={
                 styles.tableTimeCell
             }>
-                <div style={
+                <div onClick={this.onTimeClick.bind(this, time)}
+                    style={
                     data.view == 0 ?
                         styles.divTime : styles.divTimeSplash
-            }>{data.hours}:{data.minutes.toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false })}</div></td>
+                    }> {time} 
+                </div></td>
             )
+
+    }
+
+    onTimeClick(pm, e) {
+
+        handleClick(
+            {
+                type: actions.TIME_CLICK_ACTION,
+                value: pm
+            });
 
     }
 }
@@ -332,6 +372,13 @@ class Event extends React.Component {
 
 class EventsList extends React.Component
 {
+    constructor(props, context) {
+        super(props, context);
+
+        this.state = { change: false };
+
+    }
+
     render() {
         var data = this.props.data;
 
@@ -344,6 +391,18 @@ class EventsList extends React.Component
                {eventTemp}
             </ table>
         );
+    }
+
+    componentDidMount() {
+        store.addChangeListener(this.updateState.bind(this));
+    }
+
+    componentWillUnMount() {
+        store.removeChangeListener(this.updateState.bind(this));
+    }
+
+    updateState() {
+        this.setState(store.getEventsState());
     }
 }
 
