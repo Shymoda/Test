@@ -27,6 +27,14 @@ var styles = {
         borderStyle: 'solid',
     },
 
+    tableEventRowSplash: {
+        background: 'Yellow',
+        color: 'black',
+        border: 2,
+        borderColor: 'black',
+        borderStyle: 'solid',
+    },
+
     tableEventCell:
     {
         cursor: 'pointer',
@@ -99,20 +107,20 @@ const store = Object.assign({}, EventEmitter.prototype, {
 
         var ev = events.filter(function (element, index, array) { return element.isSelect });
 
-        if (ev.length > 0)
-            events.changes = !events.changes;
+        events.changes = { time: time, fact: 1 };
 
+            if (ev.length > 0)
+                events.changes = { time: time, fact: 0 };
 
-        for (var i = 0; i < ev.length; i++)
-        {
-            ev[i].time = time;
-        }
+            for (var i = 0; i < ev.length; i++) {
+                ev[i].time = time;
+            }
 
         store.emit('change');
     },
 
     getEventsState: () => {
-        return { change: events.changes };
+        return events.changes;
     },
 
     setTimeSpark: (value) => {
@@ -120,6 +128,7 @@ const store = Object.assign({}, EventEmitter.prototype, {
 
         ev.isSelect = value.state;
 
+        events.changes = { time: '', fact: 0 };
 
         store.emit('change');
 
@@ -199,7 +208,7 @@ var events = [
     }
 ];
 
-events.changes = false;
+events.changes = { time:'', fact: 0};
 
 class TimeTable extends React.Component {
 
@@ -337,9 +346,12 @@ class Event extends React.Component {
     render() {
         var data = this.props.data;
 
+        var change = this.props.change;
+
         return (
             <tr key={data.id} style={
-                styles.tableEventRow
+                ((change.time == data.time && change.fact == 1) || (change.time == data.time && change.fact == 0 && data.isSelect))
+                    ? styles.tableEventRowSplash : styles.tableEventRow
             }   >
                 <td style={
                     styles.tableEventCell
@@ -375,14 +387,16 @@ class EventsList extends React.Component
     constructor(props, context) {
         super(props, context);
 
-        this.state = { change: false };
+        this.state = { time: '', fact: 0 };
 
     }
 
     render() {
         var data = this.props.data;
 
-        var eventTemp = data.map(function (item) { return (<Event data={item} />) });
+        var state = this.state;
+
+        var eventTemp = data.map(function (item) { return (<Event data={item} change={state}/>) });
 
         return (
             <table style={
