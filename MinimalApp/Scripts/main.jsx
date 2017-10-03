@@ -74,7 +74,7 @@ var styles = {
 
 };
 
-const actions = KeyMirror({ EVENT_CLICK_ACTION: null , TIME_CLICK_ACTION: null });
+const actions = KeyMirror({ EVENT_CLICK_ACTION: null, TIME_CLICK_ACTION: null, EVENT_DELETE_ACTION: null });
 
 const appDispatcher = new Dispatcher();
 
@@ -97,11 +97,36 @@ appDispatcher.register(action => {
                 store.setEventsTime(value);
                 break;
             }
+        case actions.EVENT_DELETE_ACTION:
+            {
+                const {value} = action;
+                store.deleteEvent(value);
+                break;
+            }
         default: return null;
     }
 })
   
 const store = Object.assign({}, EventEmitter.prototype, {
+
+    deleteEvent: (id) => {
+
+        var ev = events.find(function (element, index, array) { return element.id == id; });
+
+        var idx = events.indexOf(ev);
+
+        events.splice(idx, 1);
+
+        console.log(id);
+
+        console.log(events);
+
+        console.log(idx);
+
+       events.changes = { time: '', fact: -id };
+
+        store.emit('change');
+    },
 
     setEventsTime: (time) => {
 
@@ -362,7 +387,7 @@ class Event extends React.Component {
                 <td style={
                     styles.tableEventCell
                 }> {data.event}</td>
-                <td style={
+                <td onClick={this.onEventDeleteClick.bind(this, data.id)} style={
                     styles.tableEventCell
                 }> X</td>
             </tr>
@@ -378,6 +403,16 @@ class Event extends React.Component {
                     value: { id: pm, state: e.target.checked }
                 });
         
+    }
+
+    onEventDeleteClick(pm, e) {
+
+        handleClick(
+            {
+                type: actions.EVENT_DELETE_ACTION,
+                value:  pm
+            });
+
     }
 
 }
