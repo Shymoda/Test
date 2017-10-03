@@ -2,7 +2,8 @@
 import { Dispatcher } from "flux";
 import KeyMirror from 'fbjs/lib/KeyMirror';
 import { EventEmitter } from 'events';
-
+import  ReactModal  from 'react-modal';
+import ReactDOM from 'react-dom';
 
 var Radium = require('radium');
 
@@ -69,8 +70,58 @@ var styles = {
         borderRadius: 5,
         background: 'Yellow',
         padding: '0.5em',
-    }
+    },
 
+        addButton: {
+            color: 'black',
+            textDecoration: 'none',
+            userSelect: 'none',
+            background: 'rgb(212, 75, 56)',
+            padding: 7,
+            outline: 'none',
+
+            hover:
+            {
+                background:'rgb(232, 95, 76)',
+            },
+
+            active:
+            {
+                background: 'rgb(152, 15, 0)',
+            }
+
+        },
+
+        modalTxt:
+        {
+            width: '95%',
+        },
+
+        modalButton:
+        {
+            marginTop: 20,
+            marginLeft: 25,
+            width: '35%',
+            height: 30,
+        },
+
+        modalDiv:
+        {
+            marginTop: -20,
+            marginLeft: -20,
+            padding: 20,
+            width: '100%',
+            backgroundColor: 'Snow',
+            borderBottom: 1,
+            borderBottomStyle: 'solid',
+            borderColor: 'black',
+        },
+
+        innerModalDiv:
+        {
+            marginLeft: '10%',
+            fontFamily: 'Cambria',
+        }
 
 };
 
@@ -87,7 +138,7 @@ appDispatcher.register(action => {
     {
         case actions.EVENT_CLICK_ACTION:
         {
-            const {value} = action;
+            const {value} = action;  
             store.setTimeSpark(value);
             break;
             }
@@ -116,12 +167,6 @@ const store = Object.assign({}, EventEmitter.prototype, {
         var idx = events.indexOf(ev);
 
         events.splice(idx, 1);
-
-        console.log(id);
-
-        console.log(events);
-
-        console.log(idx);
 
        events.changes = { time: '', fact: -id };
 
@@ -455,11 +500,69 @@ class EventsList extends React.Component
     }
 }
 
+
+const customStyles = {
+    content: {
+        top: '50%',
+        left: '50%',
+        right: 'auto',
+        bottom: 'auto',
+        marginRight: '-50%',
+        width: 250,
+        height:250,
+        transform: 'translate(-50%, -50%)',
+        backgroundColor: 'LemonChiffon',
+        fontFamily: 'Cambria',
+        
+    }
+};
+
 class CommonPanel extends React.Component
 {
+    constructor() {
+        super();
+        this.state = {
+            showModal: false
+        };
+
+        this.handleOpenModal = this.handleOpenModal.bind(this);
+        this.handleCloseModal = this.handleCloseModal.bind(this);
+    }
+
+    handleOpenModal() {
+        this.setState({ showModal: true });
+    }
+
+    handleCloseModal() {
+        this.setState({ showModal: false });
+    }
+
+
     render()
     {
         return (
+            <div>
+                <button onClick={this.handleOpenModal} style={styles.addButton}>Добавить событие</button>
+
+                <ReactModal
+                    isOpen={this.state.showModal}
+                    contentLabel="Minimal Modal Example"
+                    style={customStyles}
+                    
+
+                >
+                    <div style={styles.modalDiv}><div style={styles.innerModalDiv}>Добавление нового пункта</div></div>
+                    <form>
+                        <p>Название</p>
+                        <input type='text' style={styles.modalTxt} />
+                        <p>Время  </p>
+                        <input type='text' style={styles.modalTxt} />
+                        <button style={styles.modalButton} onClick={this.closeModal}>OK</button>
+                        <button style={styles.modalButton} onClick={this.closeModal}>Cancel</button>
+                    </form>
+
+                </ReactModal>
+
             <table style={
                 styles.mainTable
             }  >
@@ -470,6 +573,7 @@ class CommonPanel extends React.Component
                     <TimeTable borderTime01={{ hours: 10, minutes: 0 }}
                         borderTime02={{ hours: 22, minutes: 0 }} TimeStep={30} /> 
                     </td></tr></table>
+                </div>
             );
     }
 }
