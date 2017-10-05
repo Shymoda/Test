@@ -8,10 +8,40 @@ namespace MinimalApp.Controllers
 {
    public class HomeController : Controller
    {
-      public IActionResult Index()
-         => View();
+        public IActionResult Index()
+        {
 
-      public string Error()
-         => "Error";
+            return View();
+        }
+
+        public JsonResult Data()
+        {
+            var events = new List<Events>();
+
+            using (ReactContext rc = new ReactContext())
+            {
+                 events = rc.Events.ToList();
+            }
+
+            return Json(events);
+        }
+
+        public JsonResult DeleteEvent(int id)
+        {
+            var events = new List<Events>();
+
+            using (ReactContext rc = new ReactContext())
+            {
+                Events tmp = new Events { Id = id };
+
+                rc.Events.Remove(tmp);
+
+                rc.SaveChanges();
+
+                events = rc.Events.ToList();
+            }
+
+            return Json(events);
+        }
    }
 }

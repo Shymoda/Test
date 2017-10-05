@@ -7,6 +7,7 @@ import ReactDOM from 'react-dom';
 
 var Radium = require('radium');
 
+
 var styles = {
 
     mainTable:
@@ -125,7 +126,7 @@ var styles = {
 
 };
 
-const actions = KeyMirror({ EVENT_CLICK_ACTION: null, TIME_CLICK_ACTION: null, EVENT_DELETE_ACTION: null });
+const actions = KeyMirror({ EVENT_CLICK_ACTION: null, TIME_CLICK_ACTION: null, EVENT_DELETE_ACTION: null,  EVENT_LOAD_ACTION: null});
 
 const appDispatcher = new Dispatcher();
 
@@ -154,20 +155,78 @@ appDispatcher.register(action => {
                 store.deleteEvent(value);
                 break;
             }
+        case  actions.EVENT_LOAD_ACTION:
+            {
+                store.loadEvents();
+                break;
+            }
         default: return null;
     }
 })
+
+var events = [];
+
+events.changes = { time: '', fact: 0 };
   
 const store = Object.assign({}, EventEmitter.prototype, {
 
+    loadEvents: () =>
+    {
+        var xhr = new XMLHttpRequest();
+
+        xhr.open("POST", "/Home/Data");
+
+        xhr.send();
+
+        xhr.onreadystatechange = function () {
+
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                var evs = JSON.parse(xhr.responseText);
+
+                for (var i=0; i < evs.length; i++)
+                {
+                    events.push(evs[i]);
+                    events[i].time = parseInt(events[i].time.split(':')[0]).toString() +
+                        ":" + (parseInt(events[i].time.split(':')[1]).toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false }));
+                    events[i].isSelect = 0;
+
+                }
+
+                store.emit('change');
+            }
+        }
+
+    },
+
     deleteEvent: (id) => {
 
-        var ev = events.find(function (element, index, array) { return element.id == id; });
+        var xhr = new XMLHttpRequest();
 
-        var idx = events.indexOf(ev);
+        console.log(id);
 
-        events.splice(idx, 1);
+       xhr.open("GET", "/Home/DeleteEvent/?id="+id.toString());
 
+       xhr.send();
+
+        xhr.onreadystatechange = function () {
+
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                var evs = JSON.parse(xhr.responseText);
+
+                events.length = 0;
+
+                for (var i = 0; i < evs.length; i++) {
+                    events.push(evs[i]);
+                    events[i].time = parseInt(events[i].time.split(':')[0]).toString() +
+                        ":" + (parseInt(events[i].time.split(':')[1]).toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false }));
+                    events[i].isSelect = 0;
+
+                }
+
+                store.emit('change');
+            }
+        }
+        
        events.changes = { time: '', fact: -id };
 
         store.emit('change');
@@ -210,6 +269,8 @@ const store = Object.assign({}, EventEmitter.prototype, {
         {
             var ev = events.filter(function (element, index, array) { return element.isSelect});
 
+            console.log('state '+ev[0].time+ev.length);
+
             if(ev.length<2)
                 return { time: ev[0].time };
             else
@@ -240,45 +301,7 @@ const store = Object.assign({}, EventEmitter.prototype, {
     }
 }) 
 
-var events = [
-    {
-        id:0,
-        event: 'Прыжки в длину',
-        time: '10:30',
-        isSelect: 0,
-        isTimeSelect:0
-    },
-    {
-        id:1,
-        event: 'Прыжки в ширину',
-        time: '10:30',
-        isSelect: 0,
-        isTimeSelect:0
-    },
-    {
-        id:2,
-        event: 'Прыжки в глубину',
-        time: '12:30',
-        isSelect: 0,
-        isTimeSelect: 0
-    },
-    {
-        id: 3,
-        event: 'Прыжки в высоту',
-        time: '13:30',
-        isSelect: 0,
-        isTimeSelect: 0
-    },
-    {
-        id: 4,
-        event: 'И тому подобное',
-        time: '14:30',
-        isSelect: 0,
-        isTimeSelect: 0
-    }
-];
 
-events.changes = { time:'', fact: 0};
 
 class TimeTable extends React.Component {
 
@@ -300,8 +323,9 @@ class TimeTable extends React.Component {
         {
             var tmp = (interTime[interTime.length - 1].hours.toString() + ':' + interTime[interTime.length - 1].minutes.toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false }));
 
-            if (tmp == this.state.time)
+            if (tmp == this.state.time ) 
             {
+
                 interTime[interTime.length - 1].view = 1;
             }
             else
@@ -462,8 +486,7 @@ class Event extends React.Component {
 
 }
 
-class EventsList extends React.Component
-{
+class EventsList extends React.Component {
     constructor(props, context) {
         super(props, context);
 
@@ -472,24 +495,28 @@ class EventsList extends React.Component
     }
 
     render() {
+
         var data = this.props.data;
 
         var state = this.state;
 
-        var eventTemp = data.map(function (item) { return (<Event data={item} change={state}/>) });
+        var eventTemp = data.map(function (item) { return (<Event data={item} change={state} />) });
+
 
         return (
             <table style={
                 styles.tableEvent
-            }  >               
-               {eventTemp}
+            }  >
+                {eventTemp}
             </ table>
         );
     }
 
     componentDidMount() {
+
         store.addChangeListener(this.updateState.bind(this));
     }
+
 
     componentWillUnMount() {
         store.removeChangeListener(this.updateState.bind(this));
@@ -498,7 +525,9 @@ class EventsList extends React.Component
     updateState() {
         this.setState(store.getEventsState());
     }
-}
+
+    }
+
 
 
 const customStyles = {
@@ -517,8 +546,7 @@ const customStyles = {
     }
 };
 
-class CommonPanel extends React.Component
-{
+class CommonPanel extends React.Component {
     constructor() {
         super();
         this.state = {
@@ -527,19 +555,14 @@ class CommonPanel extends React.Component
 
         this.handleOpenModal = this.handleOpenModal.bind(this);
         this.handleCloseModal = this.handleCloseModal.bind(this);
-    }
 
-    handleOpenModal() {
-        this.setState({ showModal: true });
-    }
-
-    handleCloseModal() {
-        this.setState({ showModal: false });
+        this.handleLoad = this.handleLoad.bind(this);
     }
 
 
-    render()
-    {
+    render() {
+        var data = this.props.data;
+        console.log('Component');
         return (
             <div>
                 <button onClick={this.handleOpenModal} style={styles.addButton}>Добавить событие</button>
@@ -548,38 +571,81 @@ class CommonPanel extends React.Component
                     isOpen={this.state.showModal}
                     contentLabel="Minimal Modal Example"
                     style={customStyles}
-                    
+
 
                 >
                     <div style={styles.modalDiv}><div style={styles.innerModalDiv}>Добавление нового пункта</div></div>
-                    <form>
+                    <form onSubmit={this.handleSubmit.bind(this) }>
                         <p>Название</p>
-                        <input type='text' style={styles.modalTxt} />
+                        <input  type='text' style={styles.modalTxt} />   
                         <p>Время  </p>
-                        <input type='text' style={styles.modalTxt} />
-                        <button style={styles.modalButton} onClick={this.closeModal}>OK</button>
-                        <button style={styles.modalButton} onClick={this.closeModal}>Cancel</button>
+                        <input id="time" type='text' style={styles.modalTxt} />
+                        <button type="submit" style={styles.modalButton}>OK</button>
+                        <button type="button" style={styles.modalButton} onClick={this.handleCloseModal}>Cancel</button>
                     </form>
 
                 </ReactModal>
 
-            <table style={
-                styles.mainTable
-            }  >
-                <tr><td>
-                    <EventsList data={events} />
-                </td>
-                    <td>
-                    <TimeTable borderTime01={{ hours: 10, minutes: 0 }}
-                        borderTime02={{ hours: 22, minutes: 0 }} TimeStep={30} /> 
-                    </td></tr></table>
-                </div>
-            );
+                <table style={
+                    styles.mainTable
+                }  >
+                    <tr><td>
+                        <EventsList data={data} />
+                    </td>
+                        <td>
+                            <TimeTable borderTime01={{ hours: 10, minutes: 0 }}
+                                borderTime02={{ hours: 22, minutes: 0 }} TimeStep={30} />
+                        </td></tr></table>
+            </div>
+        );
+    }
+
+    handleOpenModal() {
+        this.setState({ showModal: true });
+    }
+
+    handleCloseModal() {
+        alert("ddddddddddddd");
+        this.setState({ showModal: false });
+    }
+
+
+    componentDidMount() {
+        this.handleLoad();
+    }
+
+    handleLoad() {
+        handleClick(
+            {
+                type: actions.EVENT_LOAD_ACTION
+            });
+
+    }
+
+    handleSubmit(e) {
+        e.preventDefault();
+      ///  var fd = this.refs.Time.value;
+        var id = e.time.value;
+        alert(id);
+       // this.setState({ showModal: false });
+      /*  handleClick(
+            {
+                type: actions.EVENT_ADD_ACTION
+            });*/
     }
 }
 
+class All extends React.Component {
+    render() {
+        return (
+            <div>
+                <CommonPanel data={events} />
+            </div>
+        );
+    }
+}
 
 ReactDOM.render(
-     <CommonPanel />,
+    <All />,
     document.getElementById("content")
 );
