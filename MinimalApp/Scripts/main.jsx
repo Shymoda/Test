@@ -126,7 +126,7 @@ var styles = {
 
 };
 
-const actions = KeyMirror({ EVENT_CLICK_ACTION: null, TIME_CLICK_ACTION: null, EVENT_DELETE_ACTION: null,  EVENT_LOAD_ACTION: null});
+const actions = KeyMirror({ EVENT_CLICK_ACTION: null, TIME_CLICK_ACTION: null, EVENT_DELETE_ACTION: null, EVENT_LOAD_ACTION: null, EVENT_ADD_ACTION: null});
 
 const appDispatcher = new Dispatcher();
 
@@ -160,6 +160,12 @@ appDispatcher.register(action => {
                 store.loadEvents();
                 break;
             }
+        case actions.EVENT_ADD_ACTION:
+            {
+                const { value } = action;
+                store.addEvent(value);
+                break;
+            }
         default: return null;
     }
 })
@@ -169,6 +175,32 @@ var events = [];
 events.changes = { time: '', fact: 0 };
   
 const store = Object.assign({}, EventEmitter.prototype, {
+
+    addEvent: (event) =>
+    {
+        var xhr = new XMLHttpRequest();
+
+        xhr.open("GET", "/Home/AddEvent/?evt="+event.event+"&time="+event.time);
+
+        xhr.send();
+
+        xhr.onreadystatechange = function () {
+
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                var evs = JSON.parse(xhr.responseText);
+
+                for (var i = 0; i < evs.length; i++) {
+                    events.push(evs[i]);
+                    events[i].time = parseInt(events[i].time.split(':')[0]).toString() +
+                        ":" + (parseInt(events[i].time.split(':')[1]).toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false }));
+                    events[i].isSelect = 0;
+
+                }
+
+                store.emit('change');
+            }
+        }
+    },
 
     loadEvents: () =>
     {
@@ -238,14 +270,46 @@ const store = Object.assign({}, EventEmitter.prototype, {
 
         events.changes = { time: time, fact: 1 };
 
-            if (ev.length > 0)
-                events.changes = { time: time, fact: 0 };
+        var ids = "";
 
-            for (var i = 0; i < ev.length; i++) {
-                ev[i].time = time;
+        if (ev.length > 0) {
+            events.changes = { time: time, fact: 0 };
+
+             ids = ev[0].id;
+        }
+
+            for (var i = 1; i < ev.length; i++) {
+                ids += "_" + ev[i].id;
             }
 
-        store.emit('change');
+            var xhr = new XMLHttpRequest();
+
+            xhr.open("GET", "/Home/ChangeEvent/?ids=" + ids.toString()+"&time="+time);
+
+            xhr.send();
+
+            xhr.onreadystatechange = function () {
+
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var evs = JSON.parse(xhr.responseText);
+
+                    events.length = 0;
+
+                    for (var i = 0; i < evs.length; i++) {
+                        events.push(evs[i]);
+                        events[i].time = parseInt(events[i].time.split(':')[0]).toString() +
+                            ":" + (parseInt(events[i].time.split(':')[1]).toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false }));
+
+                        if (ev.filter(function (element, index, array) { return element.id == events[i].id }).length>0)
+                            events[i].isSelect = 1;
+                        else
+                            events[i].isSelect = 0;
+                           
+                    }
+
+                    store.emit('change');
+                }
+            }
     },
 
     getEventsState: () => {
@@ -577,9 +641,9 @@ class CommonPanel extends React.Component {
                     <div style={styles.modalDiv}><div style={styles.innerModalDiv}>Добавление нового пункта</div></div>
                     <form onSubmit={this.handleSubmit.bind(this) }>
                         <p>Название</p>
-                        <input  type='text' style={styles.modalTxt} />   
+                        <input type='text' style={styles.modalTxt} value={this.state.event} onChange={this.handleEventChange.bind(this)} />   
                         <p>Время  </p>
-                        <input id="time" type='text' style={styles.modalTxt} />
+                        <input id="time" type='text' style={styles.modalTxt} value={this.state.time} onChange={this.handleTimeChange.bind(this)}/>
                         <button type="submit" style={styles.modalButton}>OK</button>
                         <button type="button" style={styles.modalButton} onClick={this.handleCloseModal}>Cancel</button>
                     </form>
@@ -625,13 +689,22 @@ class CommonPanel extends React.Component {
     handleSubmit(e) {
         e.preventDefault();
       ///  var fd = this.refs.Time.value;
-        var id = e.time.value;
-        alert(id);
+     //   var id = e.time.value;
+      //  alert(this.state.event + " " + this.state.time);
        // this.setState({ showModal: false });
-      /*  handleClick(
+        handleClick(
             {
-                type: actions.EVENT_ADD_ACTION
-            });*/
+                type: actions.EVENT_ADD_ACTION,
+                value: { event: this.state.event, time: this.state.time }
+            });
+    }
+
+    handleEventChange(e) {
+        this.setState({ event: e.target.value });
+    }
+
+    handleTimeChange(e) {
+        this.setState({ time: e.target.value });
     }
 }
 
