@@ -5,100 +5,91 @@ import { EventEmitter } from 'events';
 import  ReactModal  from 'react-modal';
 import ReactDOM from 'react-dom';
 
-var Radium = require('radium');
+var Radium = require('radium'); // Компонент работы со стилями
 
+var styles = { 
 
-var styles = {
-
-    mainTable:
+    mainTable: // Стили оформления таблицы с событиями
     {
         left:'30%',
     },
 
-    tableEvent:
+    tableEvent: // Стиль невыделенного события 
     {
         borderSpacing: 0,
         borderCollapse: 'collapse',
     },
 
-    tableEventRow: {
+    tableEventCommon: {  // Общее для событий в любом состоянии
+        color: 'black',
+        border: 2,
+        borderColor: 'black',
+        borderStyle: 'solid',
+    },
+
+    tableEventRow: { // Стиль выделенного события
         background: 'LightSalmon',
-        color: 'black',
-        border: 2,
-        borderColor: 'black',
-        borderStyle: 'solid',
     },
 
-    tableEventRowSplash: {
+    tableEventRowSplash: { // Стиль отдельной строки таблицы с событиями
         background: 'Yellow',
-        color: 'black',
-        border: 2,
-        borderColor: 'black',
-        borderStyle: 'solid',
     },
 
-    tableEventCell:
+    tableEventCell: // Стиль отдельной ячейки таблицы с событиями
     {
         cursor: 'pointer',
         padding: '0.5em',
     },
 
-        tableTime:
+    tableTime:  // Стиль таблицы со временем
     {
         borderSpacing:2 ,
     },
 
-    tableTimeRow: {
+    tableTimeRow: {  // Стиль отдельной строки таблицы со времем
         color: 'black',
     },
 
-    tableTimeCell:
+    tableTimeCell:  // Стиль отдельной ячейки таблицы со временем
     {
         cursor: 'pointer',
         padding: '0.1em',
     },
 
-    divTime:
-{
-        borderRadius: 5,
-        background: 'GreenYellow',
-        padding: '0.5em',
-    },
-
-
-        divTimeSplash:
+    divTimeCommon:  // Стиль div'а внутри ячейки таблицы со временем (общий)
     {
         borderRadius: 5,
-        background: 'Yellow',
         padding: '0.5em',
     },
 
-        addButton: {
+    divTime: // Стиль div'а внутри ячейки таблицы со временем (невыделенный)
+{
+        background: 'GreenYellow',
+    },
+
+
+    divTimeSplash: // Стиль div'а внутри ячейки таблицы со временем (выделенный)
+    {
+        background: 'Yellow',
+    },
+
+    addButton: { // Стиль кнопки добавления события
             color: 'black',
             textDecoration: 'none',
             userSelect: 'none',
-            background: 'rgb(212, 75, 56)',
-            padding: 7,
+            background: 'Lightpink',
+            padding: 10,
+            margin: 15,
             outline: 'none',
-
-            hover:
-            {
-                background:'rgb(232, 95, 76)',
-            },
-
-            active:
-            {
-                background: 'rgb(152, 15, 0)',
-            }
 
         },
 
-        modalTxt:
+    modalTxt: // Стиль всплывающего окна
         {
             width: '95%',
         },
 
-        modalButton:
+    modalButton: // Стиль кнопок всплывающего окна
         {
             marginTop: 20,
             marginLeft: 25,
@@ -106,7 +97,7 @@ var styles = {
             height: 30,
         },
 
-        modalDiv:
+    modalDiv: // Стиль заголовка всплывающего окна
         {
             marginTop: -20,
             marginLeft: -20,
@@ -118,7 +109,7 @@ var styles = {
             borderColor: 'black',
         },
 
-        innerModalDiv:
+    innerModalDiv: // Стиль заголовка всплывающего окна
         {
             marginLeft: '10%',
             fontFamily: 'Cambria',
@@ -126,41 +117,61 @@ var styles = {
 
 };
 
-const actions = KeyMirror({ EVENT_CLICK_ACTION: null, TIME_CLICK_ACTION: null, EVENT_DELETE_ACTION: null, EVENT_LOAD_ACTION: null, EVENT_ADD_ACTION: null});
+const customStyles = { // Стили модального окна
+    content: {
+        top: '50%',
+        left: '50%',
+        right: 'auto',
+        bottom: 'auto',
+        marginRight: '-50%',
+        width: 250,
+        height: 250,
+        transform: 'translate(-50%, -50%)',
+        backgroundColor: 'LemonChiffon',
+        fontFamily: 'Cambria',
 
-const appDispatcher = new Dispatcher();
+    }
+};
 
-const handleClick = (action) => {
+const actions = KeyMirror({
+    EVENT_CHANGE_ACTION: null, TIME_CLICK_ACTION: null, EVENT_DELETE_ACTION: null,
+    EVENT_LOAD_ACTION: null, EVENT_ADD_ACTION: null
+}); // Чтобы значения соответствовали ключам
+
+const appDispatcher = new Dispatcher(); // Диспетчер
+
+
+const handleClick = (action) => { // Для отсылки данных обработчикам
     appDispatcher.dispatch(action);
 }
 
-appDispatcher.register(action => {
+appDispatcher.register(action => { // Регистрация обработчиков действий диспетчером
     switch (action.type)
     {
-        case actions.EVENT_CLICK_ACTION:
+        case actions.EVENT_CHANGE_ACTION: // Изменение времени события
         {
             const {value} = action;  
             store.setTimeSpark(value);
             break;
             }
-        case actions.TIME_CLICK_ACTION:
+        case actions.TIME_CLICK_ACTION: // Выбор блока времени мышкой
             {
                 const {value} = action;
                 store.setEventsTime(value);
                 break;
             }
-        case actions.EVENT_DELETE_ACTION:
+        case actions.EVENT_DELETE_ACTION: // Удаление событи\
             {
                 const {value} = action;
                 store.deleteEvent(value);
                 break;
             }
-        case  actions.EVENT_LOAD_ACTION:
+        case actions.EVENT_LOAD_ACTION: // Загрузка массива событий
             {
                 store.loadEvents();
                 break;
             }
-        case actions.EVENT_ADD_ACTION:
+        case actions.EVENT_ADD_ACTION: // Добавление события
             {
                 const { value } = action;
                 store.addEvent(value);
@@ -170,156 +181,124 @@ appDispatcher.register(action => {
     }
 })
 
-var events = [];
+var events = []; // Массив событий
 
-events.changes = { time: '', fact: 0 };
-  
-const store = Object.assign({}, EventEmitter.prototype, {
+events.changes = { time: '', fact: 0 };  // Объект для регистрации изменений в массиве событий
 
-    addEvent: (event) =>
-    {
-        var xhr = new XMLHttpRequest();
+events.errorLoad = { message: '' };  // Сообщение об ошибке с сервера
 
-        xhr.open("GET", "/Home/AddEvent/?evt="+event.event+"&time="+event.time);
+events.ajaxRequest = function (request, isChange, arr) {  // Асинхронный запрос к контроллеру с сервера
 
-        xhr.send();
+    events.errorLoad = { message: '' };
 
-        xhr.onreadystatechange = function () {
+    var xhr = new XMLHttpRequest(); // Создание объекта XMLHttpReques и отправка запроса на сервер
 
-            if (xhr.readyState == 4 && xhr.status == 200) {
-                var evs = JSON.parse(xhr.responseText);
+    xhr.open("GET", request);
 
-                for (var i = 0; i < evs.length; i++) {
-                    events.push(evs[i]);
+    xhr.send();
+
+    xhr.onreadystatechange = function () { // Когда запрос был выполнен и пришел ответ
+
+        if (xhr.readyState == 4 && xhr.status == 200) { // Если не было ошибок
+            var eventsTmp = JSON.parse(xhr.responseText); // Сохранение результата во временный объект
+
+            if (eventsTmp instanceof Array) { // Если временный объект - массив
+
+                events.length = 0; // Перезапись данных в исходном массиве событий
+
+                for (var i = 0; i < eventsTmp.length; i++) {
+                    events.push(eventsTmp[i]);
                     events[i].time = parseInt(events[i].time.split(':')[0]).toString() +
                         ":" + (parseInt(events[i].time.split(':')[1]).toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false }));
-                    events[i].isSelect = 0;
 
-                }
-
-                store.emit('change');
-            }
-        }
-    },
-
-    loadEvents: () =>
-    {
-        var xhr = new XMLHttpRequest();
-
-        xhr.open("POST", "/Home/Data");
-
-        xhr.send();
-
-        xhr.onreadystatechange = function () {
-
-            if (xhr.readyState == 4 && xhr.status == 200) {
-                var evs = JSON.parse(xhr.responseText);
-
-                for (var i=0; i < evs.length; i++)
-                {
-                    events.push(evs[i]);
-                    events[i].time = parseInt(events[i].time.split(':')[0]).toString() +
-                        ":" + (parseInt(events[i].time.split(':')[1]).toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false }));
-                    events[i].isSelect = 0;
-
-                }
-
-                store.emit('change');
-            }
-        }
-
-    },
-
-    deleteEvent: (id) => {
-
-        var xhr = new XMLHttpRequest();
-
-        console.log(id);
-
-       xhr.open("GET", "/Home/DeleteEvent/?id="+id.toString());
-
-       xhr.send();
-
-        xhr.onreadystatechange = function () {
-
-            if (xhr.readyState == 4 && xhr.status == 200) {
-                var evs = JSON.parse(xhr.responseText);
-
-                events.length = 0;
-
-                for (var i = 0; i < evs.length; i++) {
-                    events.push(evs[i]);
-                    events[i].time = parseInt(events[i].time.split(':')[0]).toString() +
-                        ":" + (parseInt(events[i].time.split(':')[1]).toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false }));
-                    events[i].isSelect = 0;
-
-                }
-
-                store.emit('change');
-            }
-        }
-        
-       events.changes = { time: '', fact: -id };
-
-        store.emit('change');
-    },
-
-    setEventsTime: (time) => {
-
-        var ev = events.filter(function (element, index, array) { return element.isSelect });
-
-        events.changes = { time: time, fact: 1 };
-
-        var ids = "";
-
-        if (ev.length > 0) {
-            events.changes = { time: time, fact: 0 };
-
-             ids = ev[0].id;
-        }
-
-            for (var i = 1; i < ev.length; i++) {
-                ids += "_" + ev[i].id;
-            }
-
-            var xhr = new XMLHttpRequest();
-
-            xhr.open("GET", "/Home/ChangeEvent/?ids=" + ids.toString()+"&time="+time);
-
-            xhr.send();
-
-            xhr.onreadystatechange = function () {
-
-                if (xhr.readyState == 4 && xhr.status == 200) {
-                    var evs = JSON.parse(xhr.responseText);
-
-                    events.length = 0;
-
-                    for (var i = 0; i < evs.length; i++) {
-                        events.push(evs[i]);
-                        events[i].time = parseInt(events[i].time.split(':')[0]).toString() +
-                            ":" + (parseInt(events[i].time.split(':')[1]).toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false }));
-
-                        if (ev.filter(function (element, index, array) { return element.id == events[i].id }).length>0)
+                    if (!isChange) // Если это был не запрос на редактирование
+                        events[i].isSelect = 0;
+                    else // Иначе нужно восстановить состояние выделенных элементов
+                    {
+                        if (arr.filter(function (element, index, array) { return element.id == events[i].id }).length > 0)
                             events[i].isSelect = 1;
                         else
                             events[i].isSelect = 0;
-                           
+
                     }
 
-                    store.emit('change');
                 }
+
+                events.sort(function (event01, event02) { return event01.time > event02.time; }); // Сортировка по дате
             }
+            else
+                events.errorLoad = { message: eventsTmp.message }; // С сервера пришла ошибка
+
+            store.emit('change');
+        }
+    }
+}
+  
+const store = Object.assign({}, EventEmitter.prototype, { // Хранилище
+
+    getLoadError: ()=> // Получение информации об ошибке
+    {
+        return events.errorLoad;
     },
 
-    getEventsState: () => {
+    addEvent: (event) => // Добавление события 
+    {
+        events.ajaxRequest("/Home/AddEvent/?evt=" + event.event + "&time=" + event.time, false,null );
+    },
+
+    loadEvents: () => // Загрузка событий
+    {
+        events.ajaxRequest("/Home/Data", false,null);
+    },
+
+    deleteEvent: (id) => { // Удаление события
+        events.changes = { time: '', fact: -id };
+
+        events.ajaxRequest("/Home/DeleteEvent/?id=" + id.toString(), false,null);
+    },
+
+    setEventsTime: (time) => { // Изменение времени у событий
+
+        var evsPicked = events.filter(function (element, index, array) { return element.isSelect }); // Массив выделенных событий
+
+        events.changes = { time: time, fact: 1 };
+
+        if (evsPicked.length > 0) {
+            var idString = "";
+
+            if (evsPicked.length > 0) { // Формирование строки из id изменяемых событий для отправки на сервер
+                events.changes = { time: time, fact: 0 };
+
+                idString = evsPicked[0].id;
+            }
+
+            for (var i = 1; i < evsPicked.length; i++) {
+                idString += "_" + evsPicked[i].id;
+            }
+
+            events.ajaxRequest("/Home/ChangeEvent/?ids=" + idString.toString() + "&time=" + time, true, evsPicked);
+        }
+        else
+        {
+            events.errorLoad = { message: '' };
+
+            store.emit('change');
+        }
+
+         
+    },
+
+    getEventsState: () => { // Получение состояния списка событий
         return events.changes;
     },
 
-    setTimeSpark: (value) => {
-        var ev = events.find(function (element, index, array) { return element.id == value.id; });
+    setTimeSpark: (value) => { // Выделение (снятие выделения) времени события
 
-        ev.isSelect = value.state;
+        events.errorLoad = { message: '' };
+
+        var evPicked = events.find(function (element, index, array) { return element.id == value.id; });// Поиск выбранного события
+
+        evPicked.isSelect = value.state; // Установка (снятие) выделения с события
 
         events.changes = { time: '', fact: 0 };
 
@@ -327,26 +306,24 @@ const store = Object.assign({}, EventEmitter.prototype, {
 
     },
 
-    getTimeState: () => {
+    getTimeState: () => { // Получение текущего времени для установки
 
         try
         {
-            var ev = events.filter(function (element, index, array) { return element.isSelect});
+            var evsPicked = events.filter(function (element, index, array) { return element.isSelect }); // Массив выделенных событий
 
-            console.log('state '+ev[0].time+ev.length);
-
-            if(ev.length<2)
-                return { time: ev[0].time };
+            if (evsPicked.length < 2) // Если выбрано только одно событие, вернуть его время
+                return { time: evsPicked[0].time };
             else
             {
-                for (var i=0; i < ev.length-1; i++)
+                for (var i = 0; i < evsPicked.length - 1; i++) // Если выбрано несколько, проверить их время на совпадение
                 {
-                    if (ev[i].time != ev[i + 1].time) 
+                    if (evsPicked[i].time != evsPicked[i + 1].time) 
                         return { time: '-----' };
                     
                 }
 
-                return { time: ev[0].time };
+                return { time: evsPicked[0].time };
             }
         }
         catch (e)
@@ -356,7 +333,8 @@ const store = Object.assign({}, EventEmitter.prototype, {
 
     },
 
-    addChangeListener: (callback) => {
+
+    addChangeListener: (callback) => { // Методы для назначения(снятия) обработчиков событий у контролов
         store.on('change', callback);
     },
 
@@ -367,7 +345,7 @@ const store = Object.assign({}, EventEmitter.prototype, {
 
 
 
-class TimeTable extends React.Component {
+class TimeTable extends React.Component { // Компонент отрисовки таблицы, содержащей временные блоки
 
     constructor(props, context) {
         super(props, context);
@@ -379,28 +357,29 @@ class TimeTable extends React.Component {
     render()
     {
         
-        var interTime = [];
+        var interTime = []; // Массив для записи значений времени
 
-        interTime.push(this.props.borderTime01);
+        interTime.push(this.props.borderTime01); // Помещение в массив первого значение (задано разработчиком)
 
-        while (true)
+        while (true) // Цикл генерации промежуточных значений
         {
-            var tmp = (interTime[interTime.length - 1].hours.toString() + ':' + interTime[interTime.length - 1].minutes.toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false }));
+            var tmp = (interTime[interTime.length - 1].hours.toString() + ':' // Приведение времени к нужному формату
+                + interTime[interTime.length - 1].minutes.toLocaleString('en-US',
+                    { minimumIntegerDigits: 2, useGrouping: false }));
 
             if (tmp == this.state.time ) 
-            {
-
                 interTime[interTime.length - 1].view = 1;
-            }
             else
-                interTime[interTime.length - 1] .view = 0;
+                interTime[interTime.length - 1].view = 0;
 
-            var tmpMin = (interTime[interTime.length - 1].minutes + this.props.TimeStep) % 60;
-            var tmpHour = Math.floor(interTime[interTime.length - 1].hours + (interTime[interTime.length - 1].minutes + this.props.TimeStep) / 60);
+            var tmpMin = (interTime[interTime.length - 1].minutes + this.props.TimeStep) % 60; // Расчет следующего значения времени
+            var tmpHour = Math.floor(interTime[interTime.length - 1].hours +
+                (interTime[interTime.length - 1].minutes + this.props.TimeStep) / 60);
 
             var tmpTime = { hours: tmpHour, minutes: tmpMin };
 
-            if ((tmpTime.hours > this.props.borderTime02.hours) || ((tmpTime.hours == this.props.borderTime02.hours)
+            if ((tmpTime.hours > this.props.borderTime02.hours) || // Если было сгенерировано максимальное значение в заданном диапазоне
+                ((tmpTime.hours == this.props.borderTime02.hours)
                 && (tmpTime.minutes > 0)))
                 break;
 
@@ -409,26 +388,25 @@ class TimeTable extends React.Component {
 
         interTime.push(this.props.TimeStep);
 
+        // Приведение данных к виду, удобному для отображения в таблице
+
         var tabs = [];
 
         var j = 0;
 
-        for (var i = 0; i < interTime.length; i += 3)
+        for (var i = 0; i < interTime.length; i += 3) // Каждая строка таблицы содержит максимум 3 блока
         {
             tabs[j] = Array(interTime[i], interTime[i + 1], interTime[i + 2]);
 
             j++
         }
 
-        var diffs = tabs.length*3 - interTime.length;
+        var diffs = tabs.length*3 - interTime.length; // Отсечение лишнего
 
         tabs[tabs.length - 1]=tabs[tabs.length - 1].slice(0, 3 - diffs-1);
 
         return (
-            <table style={
-                styles.tableTime
-            }><TimeRow data={tabs}/></table>
-
+            <table style={styles.tableTime}><TimeRow data={tabs}/></table>
         )
     }
 
@@ -445,35 +423,32 @@ class TimeTable extends React.Component {
     }
 }
 
-class TimeRow extends React.Component {
+class TimeRow extends React.Component { // Компонент отрисовки отдельной строки таблицы
 
     render() {
 
         var data = this.props.data;
 
-        var rows = data.map(function (item) {
-            return (<tr style={
-                styles.tableTimeRow
-            }> {item.map(function (item2) { return (<TimeBlock data={item2} />) })} </tr>)
+        var rows = data.map(function (item, _id) {
+            return (<tr key={_id} style={styles.tableTimeRow}>{item.map(function (item2, id) { return (<TimeBlock key={id} data={item2} />) })}</tr>)
         });
 
         return (
-            <tr>
-                {rows}
-            </tr>
+            <tbody>{rows}</tbody>
         )
     }
 }
 
 
-class TimeBlock extends React.Component {
+class TimeBlock extends React.Component { // Компонент отрисовки отдельного блока времени
 
 
     render() {
 
         var data = this.props.data;
 
-        var time = data.hours + ':' + data.minutes.toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false });
+        var time = data.hours + ':' + data.minutes.toLocaleString('en-US',
+            { minimumIntegerDigits: 2, useGrouping: false });
         return (
             <td style={
                 styles.tableTimeCell
@@ -481,19 +456,20 @@ class TimeBlock extends React.Component {
                 <div onClick={this.onTimeClick.bind(this, time)}
                     style={
                     data.view == 0 ?
-                        styles.divTime : styles.divTimeSplash
+                            Object.assign({}, styles.divTime, styles.divTimeCommon) :
+                            Object.assign({}, styles.divTimeSplash, styles.divTimeCommon)
                     }> {time} 
                 </div></td>
             )
 
     }
 
-    onTimeClick(pm, e) {
+    onTimeClick(time, e) { // Выполняется при щелчке мышкой по блоку времени
 
         handleClick(
             {
                 type: actions.TIME_CLICK_ACTION,
-                value: pm
+                value: time
             });
 
     }
@@ -507,50 +483,52 @@ class Event extends React.Component {
         var change = this.props.change;
 
         return (
-            <tr key={data.id} style={
+            <tbody>
+            <tr  style={
                 ((change.time == data.time && change.fact == 1) || (change.time == data.time && change.fact == 0 && data.isSelect))
-                    ? styles.tableEventRowSplash : styles.tableEventRow
-            }   >
+                    ? Object.assign({}, styles.tableEventRowSplash, styles.tableEventCommon) : Object.assign({},styles.tableEventRow, styles.tableEventCommon)
+            }>
                 <td style={
-                    styles.tableEventCell
-                }> <input type='checkbox' onChange={this.onEventClick.bind(this, data.id)} /> </td>
+                    styles.tableEventCel
+                }> <input type='checkbox' onChange={this.onEventChange.bind(this, data.id)} checked={data.isSelect} /> </td>
                 <td style={
                     styles.tableEventCell
                 } >{data.time}</td>
                 <td style={
                     styles.tableEventCell
-                }> {data.event}</td>
+                }>{data.event}</td>
                 <td onClick={this.onEventDeleteClick.bind(this, data.id)} style={
                     styles.tableEventCell
-                }> X</td>
+                }>x</td>
             </tr>
+            </tbody>
         )
 
     }
 
-    onEventClick(pm, e) {
+    onEventChange(_id, e) { // Выполняется при изменении состояния checkbox'а'
         
             handleClick(
                 {
-                    type: actions.EVENT_CLICK_ACTION,
-                    value: { id: pm, state: e.target.checked }
+                    type: actions.EVENT_CHANGE_ACTION,
+                    value: { id: _id, state: e.target.checked }
                 });
         
     }
 
-    onEventDeleteClick(pm, e) {
+    onEventDeleteClick(id, e) {  // Выполняется при щелчке мышью по блоку удаления события
 
         handleClick(
             {
                 type: actions.EVENT_DELETE_ACTION,
-                value:  pm
+                value:  id
             });
 
     }
 
 }
 
-class EventsList extends React.Component {
+class EventsList extends React.Component {  // Компонент отрисовки списка событий
     constructor(props, context) {
         super(props, context);
 
@@ -564,15 +542,10 @@ class EventsList extends React.Component {
 
         var state = this.state;
 
-        var eventTemp = data.map(function (item) { return (<Event data={item} change={state} />) });
-
+        var eventTemp = data.map(function (item, id) { return (<Event key={id} data={item} change={state} />) });
 
         return (
-            <table style={
-                styles.tableEvent
-            }  >
-                {eventTemp}
-            </ table>
+            <table style={styles.tableEvent}>{eventTemp}</table>
         );
     }
 
@@ -593,45 +566,24 @@ class EventsList extends React.Component {
     }
 
 
-
-const customStyles = {
-    content: {
-        top: '50%',
-        left: '50%',
-        right: 'auto',
-        bottom: 'auto',
-        marginRight: '-50%',
-        width: 250,
-        height:250,
-        transform: 'translate(-50%, -50%)',
-        backgroundColor: 'LemonChiffon',
-        fontFamily: 'Cambria',
-        
-    }
-};
-
-class CommonPanel extends React.Component {
+class CommonPanel extends React.Component { // Компонент отрисовки общего интерфейса
     constructor() {
         super();
+
         this.state = {
             showModal: false
         };
 
-        this.handleOpenModal = this.handleOpenModal.bind(this);
-        this.handleCloseModal = this.handleCloseModal.bind(this);
-
-        this.handleLoad = this.handleLoad.bind(this);
     }
 
 
     render() {
         var data = this.props.data;
-        console.log('Component');
         return (
             <div>
-                <button onClick={this.handleOpenModal} style={styles.addButton}>Добавить событие</button>
+                <button onClick={this.handleOpenModal.bind(this)} style={styles.addButton}>Добавить событие</button>
 
-                <ReactModal
+                <ReactModal // Модальное окно
                     isOpen={this.state.showModal}
                     contentLabel="Minimal Modal Example"
                     style={customStyles}
@@ -645,7 +597,7 @@ class CommonPanel extends React.Component {
                         <p>Время  </p>
                         <input id="time" type='text' style={styles.modalTxt} value={this.state.time} onChange={this.handleTimeChange.bind(this)}/>
                         <button type="submit" style={styles.modalButton}>OK</button>
-                        <button type="button" style={styles.modalButton} onClick={this.handleCloseModal}>Cancel</button>
+                        <button type="button" style={styles.modalButton} onClick={this.handleCloseModal.bind(this)}>Cancel</button>
                     </form>
 
                 </ReactModal>
@@ -653,32 +605,49 @@ class CommonPanel extends React.Component {
                 <table style={
                     styles.mainTable
                 }  >
-                    <tr><td>
+                    <tbody>
+                        <tr>
+                            <td>
                         <EventsList data={data} />
                     </td>
                         <td>
                             <TimeTable borderTime01={{ hours: 10, minutes: 0 }}
                                 borderTime02={{ hours: 22, minutes: 0 }} TimeStep={30} />
-                        </td></tr></table>
+                        </td></tr></tbody></table>
             </div>
         );
     }
 
-    handleOpenModal() {
+    handleOpenModal() { // Открытие модального окна
         this.setState({ showModal: true });
     }
 
-    handleCloseModal() {
-        alert("ddddddddddddd");
+    handleCloseModal() { // Закрытие модального окна
         this.setState({ showModal: false });
     }
 
 
     componentDidMount() {
+        store.addChangeListener(this.updateComponentState.bind(this));
         this.handleLoad();
     }
 
-    handleLoad() {
+
+    componentWillUnMount() {
+        store.removeChangeListener(this.updateComponentState.bind(this));
+    }
+
+    updateComponentState()
+    {
+        var tmpState = store.getLoadError(); // Проверка ответа от сервера - пришел массив событий или сведения об ошибке
+
+        if (tmpState.message != "")
+            alert(tmpState.message);
+        else
+            this.setState({ showModal: false });
+    }
+
+    handleLoad() { // Сообщаем диспетчеру о необходимости загрузить информацию о событиях с сервера
         handleClick(
             {
                 type: actions.EVENT_LOAD_ACTION
@@ -686,12 +655,8 @@ class CommonPanel extends React.Component {
 
     }
 
-    handleSubmit(e) {
+    handleSubmit(e) { // Отправка формы на сервер
         e.preventDefault();
-      ///  var fd = this.refs.Time.value;
-     //   var id = e.time.value;
-      //  alert(this.state.event + " " + this.state.time);
-       // this.setState({ showModal: false });
         handleClick(
             {
                 type: actions.EVENT_ADD_ACTION,
@@ -699,7 +664,9 @@ class CommonPanel extends React.Component {
             });
     }
 
-    handleEventChange(e) {
+    // Изменение значений полей ввода
+
+    handleEventChange(e) { 
         this.setState({ event: e.target.value });
     }
 
@@ -708,7 +675,7 @@ class CommonPanel extends React.Component {
     }
 }
 
-class All extends React.Component {
+class All extends React.Component { // Самый общий компонент
     render() {
         return (
             <div>

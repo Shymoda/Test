@@ -7,7 +7,8 @@ using System.Text.RegularExpressions;
 
 namespace MinimalApp.Controllers
 {
-   public class HomeController : Controller
+
+    public class HomeController : Controller
    {
         List<Events> events = new List<Events>();
 
@@ -25,14 +26,16 @@ namespace MinimalApp.Controllers
 
                 using (ReactContext rc = new ReactContext())
                 {
-                    events = rc.Events.ToList();
+                    events = rc.Events.ToList();  
                 }
 
                 return Json(events);
             }
             catch (Exception ex)
             {
-                return Json(ex);
+                var res = new { message = ex.Message };
+
+                return Json(res);
             }
         }
 
@@ -56,7 +59,9 @@ namespace MinimalApp.Controllers
             }
             catch (Exception ex)
             {
-                return Json(ex);
+                var res = new { message = ex.Message };
+
+                return Json(res);
             }
         }
 
@@ -69,6 +74,9 @@ namespace MinimalApp.Controllers
 
                 using (ReactContext rc = new ReactContext())
                 {
+                    if(evt.Trim()=="undefined" || evt.Trim() == "")
+                        throw new Exception("Не введена информация о событии!");
+
                     Events ev = new Events { Event = evt, Time = time };
 
                     Regex regex = new Regex(pattern);
@@ -87,7 +95,9 @@ namespace MinimalApp.Controllers
             }
             catch(Exception ex)
             {
-                return Json(ex);
+                var res = new { message = ex.Message };
+
+                return Json(res);
             }
         }
 
@@ -114,7 +124,9 @@ namespace MinimalApp.Controllers
             }
             catch (Exception ex)
             {
-                return Json(ex);
+                var res = new { message = ex.Message };
+
+                return Json(res);
             }
         }
    }
